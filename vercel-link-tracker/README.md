@@ -4,7 +4,7 @@ Dashboard satu domain untuk membuat banyak short tracking links, mencatat reques
 
 ## Isi fitur
 
-- Admin login menggunakan `ADMIN_TOKEN`
+- Dashboard langsung terbuka tanpa login atau password
 - Tambah, edit, hapus link
 - URL tracking berbentuk `/go/slug`
 - Total klik per link dan keseluruhan
@@ -33,7 +33,7 @@ Dashboard satu domain untuk membuat banyak short tracking links, mencatat reques
 
 ## 3. Buka dashboard
 
-Buka root domain Vercel, misalnya `https://domain-kamu.vercel.app`, lalu login menggunakan nilai `ADMIN_TOKEN`.
+Buka root domain Vercel, misalnya `https://domain-kamu.vercel.app`, dan dashboard langsung terbuka tanpa login.
 
 Contoh:
 - URL tracking: `https://domain-kamu.vercel.app/go/promo-a`
@@ -51,6 +51,6 @@ Contoh:
 - Sistem ini menghitung request ke endpoint redirect. Bot, preview WhatsApp/Telegram, crawler, dan pemeriksa keamanan tautan juga dapat dihitung sebagai klik. Ini bukan pengukuran pengunjung manusia yang sempurna.
 - Log menyimpan waktu, referrer, dan user-agent. IP pengunjung tidak disimpan.
 - Hapus link akan menghapus akses link dari daftar, tetapi counter/log Redis lama tidak otomatis dihapus. Jangan gunakan slug yang sama lagi jika ingin mempertahankan pemisahan statistik.
-- Dashboard memakai token admin sederhana. Gunakan token acak panjang dan jangan bagikan ke orang lain.
+- **PERINGATAN:** Versi ini tidak memakai login/password. Siapa pun yang mengetahui alamat dashboard dapat melihat statistik serta menambah, mengubah, dan menghapus link. Jangan gunakan pada domain publik jika data atau link harus dirahasiakan. Untuk keamanan, batasi akses menggunakan proteksi deployment/akses di depan aplikasi.
 - Statistik harian memakai tanggal UTC.
 - Untuk penggunaan produksi, aktifkan proteksi tambahan seperti pembatasan akses admin dan pemantauan biaya Redis.

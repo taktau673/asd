@@ -1,7 +1,6 @@
-import { redis, sendJson, requireAdmin, validSlug, validDestination } from "../lib/server.js";
+import { redis, sendJson, validSlug, validDestination } from "../lib/server.js";
 
 export default async function handler(req, res) {
-  if (!requireAdmin(req, res)) return;
 
   try {
     if (req.method === "GET") {

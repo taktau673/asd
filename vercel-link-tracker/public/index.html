@@ -14,27 +14,16 @@
     button{border:0;border-radius:9px;padding:11px 15px;background:var(--accent);color:#071225;font-weight:750;cursor:pointer}button.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line)}button.danger{background:#482333;color:#ffdbe1}button:disabled{opacity:.5;cursor:not-allowed}
     .tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;white-space:nowrap}th,td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line);font-size:13px}th{color:var(--muted);font-weight:600}td .url{color:#a9c8ff;max-width:260px;overflow:hidden;text-overflow:ellipsis;display:block}.actions{display:flex;gap:6px}.actions button{padding:7px 9px;font-size:12px}
     .bars{height:180px;display:flex;align-items:end;gap:10px;padding-top:12px}.barcol{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0}.bar{width:100%;max-width:42px;background:linear-gradient(180deg,#80b3ff,#477de0);border-radius:7px 7px 2px 2px;min-height:3px}.barcol small{color:var(--muted);font-size:11px}.barcol b{font-size:10px;color:var(--muted)}
-    .login{max-width:420px;margin:10vh auto}.login .panel{padding:28px}.login input{margin:8px 0 12px}.hidden{display:none!important}.muted{color:var(--muted)}.notice{padding:10px 12px;border-radius:9px;background:#332b1a;color:#ffdc91;margin:12px 0;font-size:13px}.empty{text-align:center;color:var(--muted);padding:25px}.recent{display:grid;gap:10px}.event{padding:10px 0;border-bottom:1px solid var(--line);font-size:13px}.event small{display:block;color:var(--muted);margin-top:3px;overflow-wrap:anywhere}
+    .hidden{display:none!important}.muted{color:var(--muted)}.notice{padding:10px 12px;border-radius:9px;background:#332b1a;color:#ffdc91;margin:12px 0;font-size:13px}.empty{text-align:center;color:var(--muted);padding:25px}.recent{display:grid;gap:10px}.event{padding:10px 0;border-bottom:1px solid var(--line);font-size:13px}.event small{display:block;color:var(--muted);margin-top:3px;overflow-wrap:anywhere}
     @media(max-width:850px){.grid{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr 1fr}.formgrid button{grid-column:span 2}.stats{grid-template-columns:1fr 1fr}}
     @media(max-width:520px){.wrap{padding:20px 12px}.top{align-items:flex-start;flex-direction:column}.stats{gap:8px}.stat{padding:13px}.stat strong{font-size:24px}.formgrid{grid-template-columns:1fr}.formgrid button{grid-column:auto}}
   </style>
 </head>
 <body>
-  <section id="loginView" class="login">
-    <div class="panel">
-      <div class="brand">LINK<span>TRACKER</span></div>
-      <p class="sub">Masuk menggunakan ADMIN_TOKEN yang kamu atur di Vercel.</p>
-      <label for="token">Admin token</label>
-      <input id="token" type="password" placeholder="Masukkan token admin" autocomplete="current-password">
-      <button id="loginBtn" style="width:100%">Masuk dashboard</button>
-      <p id="loginError" class="sub"></p>
-    </div>
-  </section>
-
-  <main id="app" class="wrap hidden">
+  <main id="app" class="wrap">
     <header class="top">
       <div><div class="brand">LINK<span>TRACKER</span></div><div class="sub">Dashboard redirect dan statistik klik</div></div>
-      <div><button class="secondary" id="refreshBtn">Refresh data</button> <button class="danger" id="logoutBtn">Keluar</button></div>
+      <div><button class="secondary" id="refreshBtn">Refresh data</button></div>
     </header>
 
     <div class="notice">Catatan: angka klik menghitung setiap request ke link tracking. Bot atau pemindai tautan juga dapat menghasilkan hit.</div>
@@ -82,34 +71,19 @@
 
 <script>
   const $ = (id) => document.getElementById(id);
-  let token = sessionStorage.getItem("tracker_token") || "";
+
   let currentLinks = [];
 
-  function authHeaders(json = false) {
-    const h = { Authorization: "Bearer " + token };
-    if (json) h["Content-Type"] = "application/json";
-    return h;
-  }
   async function api(path, options = {}) {
-    const response = await fetch(path, { ...options, headers: { ...authHeaders(!!options.body), ...(options.headers || {}) } });
+    const headers = { ...(options.headers || {}) };
+    if (options.body) headers["Content-Type"] = "application/json";
+    const response = await fetch(path, { ...options, headers });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || "Permintaan gagal.");
     return data;
   }
   function fmt(n) { return Number(n || 0).toLocaleString("id-ID"); }
   function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
-
-  async function login() {
-    token = $("token").value.trim();
-    try {
-      await api("/api/links");
-      sessionStorage.setItem("tracker_token", token);
-      $("loginView").classList.add("hidden");
-      $("app").classList.remove("hidden");
-      $("loginError").textContent = "";
-      await loadDashboard();
-    } catch (e) { $("loginError").textContent = e.message; }
-  }
 
   async function loadDashboard() {
     const data = await api("/api/stats");
@@ -143,10 +117,7 @@
     `).join("") : `<div class="empty">Belum ada klik tercatat.</div>`;
   }
 
-  $("loginBtn").addEventListener("click", login);
-  $("token").addEventListener("keydown", e => { if (e.key === "Enter") login(); });
   $("refreshBtn").addEventListener("click", () => loadDashboard().catch(e => alert(e.message)));
-  $("logoutBtn").addEventListener("click", () => { sessionStorage.removeItem("tracker_token"); location.reload(); });
 
   $("addForm").addEventListener("submit", async e => {
     e.preventDefault();
@@ -181,10 +152,7 @@
     } catch (err) { alert(err.message); }
   });
 
-  if (token) {
-    $("token").value = token;
-    login();
-  }
+  loadDashboard().catch(e => alert(e.message));
 </script>
 </body>
 </html>
